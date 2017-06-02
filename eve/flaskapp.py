@@ -136,6 +136,7 @@ class Eve(Flask, Events):
         self.settings = settings
 
         self.load_config()
+        self.fix_flask_pymongo_config_compatibility()
         self.validate_domain_struct()
 
         # enable regex routing
@@ -220,41 +221,15 @@ class Eve(Flask, Events):
         # load defaults
         self.config.from_object('eve.default_settings')
 
-        # overwrite the defaults with custom user settings
+        # If we were passed a dictionary, prioritise that.
         if isinstance(self.settings, dict):
             self.config.update(self.settings)
-        else:
-            if os.path.isabs(self.settings):
-                pyfile = self.settings
-            else:
-                def find_settings_file(file_name):
-                    # check if we can locate the file from sys.argv[0]
-                    abspath = os.path.abspath(os.path.dirname(sys.argv[0]))
-                    settings_file = os.path.join(abspath, file_name)
-                    if os.path.isfile(settings_file):
-                        return settings_file
-                    else:
-                        # try to find settings.py in one of the
-                        # paths in sys.path
-                        for p in sys.path:
-                            for root, dirs, files in os.walk(p):
-                                for f in fnmatch.filter(files, file_name):
-                                    if os.path.isfile(os.path.join(root, f)):
-                                        return os.path.join(root, file_name)
+            return
 
-                # try to load file from environment variable or settings.py
-                pyfile = find_settings_file(
-                    os.environ.get('EVE_SETTINGS') or self.settings
-                )
+        settings_path = self._resolve_settings_file()
+        self.config.from_pyfile(settings_path)
 
-            if not pyfile:
-                raise IOError('Could not load settings.')
-
-            try:
-                self.config.from_pyfile(pyfile)
-            except:
-                raise
-
+    def fix_flask_pymongo_config_compatibility(self):
         # flask-pymongo compatibility
         self.config['MONGO_CONNECT'] = self.config['MONGO_OPTIONS'].get(
             'connect', True
@@ -1004,6 +979,32 @@ class Eve(Flask, Events):
             self.add_url_rule(schema_url + '/<resource>', 'schema_item',
                               view_func=schema_item_endpoint,
                               methods=['GET', 'OPTIONS'])
+
+    def _resolve_settings_file(self):
+        if os.path.isabs(self.settings):
+            pyfile = self.settings
+        else:
+            def find_settings_file(file_name):
+                # check if we can locate the file from sys.argv[0]
+                abspath = os.path.abspath(os.path.dirname(sys.argv[0]))
+                settings_file = os.path.join(abspath, file_name)
+                if os.path.isfile(settings_file):
+                    return settings_file
+                else:
+                    # try to find settings.py in one of the
+                    # paths in sys.path
+                    for p in sys.path:
+                        for root, dirs, files in os.walk(p):
+                            for f in fnmatch.filter(files, file_name):
+                                if os.path.isfile(os.path.join(root, f)):
+                                    return os.path.join(root, file_name)
+            # try to load file from environment variable or settings.py
+            pyfile = find_settings_file(
+                os.environ.get('EVE_SETTINGS') or self.settings
+            )
+        if not pyfile:
+            raise IOError('Could not load settings.')
+        return pyfile
 
     def __call__(self, environ, start_response):
         """ If HTTP_X_METHOD_OVERRIDE is included with the request and method
