@@ -12,6 +12,7 @@
 import fnmatch
 import os
 import sys
+import warnings
 
 import copy
 from events import Events
@@ -239,12 +240,13 @@ class Eve(Flask, Events):
         """ Validates that Eve configuration settings conform to the
         requirements.
         """
-        try:
-            domain = self.config['DOMAIN']
-        except:
-            raise ConfigException('DOMAIN dictionary missing or wrong.')
+        # The defaults have a default empty DOMAIN entry, so this shouldn't
+        # fail.
+        domain = self.config['DOMAIN']
         if not isinstance(domain, dict):
-            raise ConfigException('DOMAIN must be a dict.')
+            raise self._exception_with_extra_info(
+                ConfigException, 'DOMAIN must be a dict, was: %r' % (domain,)
+            )
 
     def validate_config(self):
         """ Makes sure that REST methods expressed in the configuration
@@ -992,15 +994,34 @@ class Eve(Flask, Events):
         if os.path.isfile(settings_file):
             return settings_file
 
-        # try to find settings.py in one of the
-        # paths in sys.path
+        # DEPRECATED
+        # try to find settings.py in one of the paths in sys.path
         for p in sys.path:
             for root, dirs, files in os.walk(p):
                 for f in fnmatch.filter(files, file_name):
-                    if os.path.isfile(os.path.join(root, f)):
-                        return os.path.join(root, file_name)
+                    fpath = os.path.join(root, f)
+                    if os.path.isfile(fpath):
+                        warnings.warn(
+                            'Using a settings file located somewhere in one '
+                            'of sys.path is deprecated '
+                            '(file being used is %s). '
+                            'Please check http://python-eve.org/config.html '
+                            'for advice.' % (fpath,),
+                            DeprecationWarning)
+                        return fpath
 
+        # We couldn't find the settings file we were asked to. Raise.
         raise IOError('Could not resolve settings file %s' % file_name)
+
+    def _exception_with_extra_info(self, type_, msg):
+        full_msg = """\
+{msg}
+Extra info:
+    settings file suggested at creation: {self.constructor_settings}
+    EVE_SETTINGS env var: {EVE_SETTINGS}
+    resolved settings file: {self.resolved_settings}
+""".format(EVE_SETTINGS=os.environ.get('EVE_SETTINGS'), **locals())
+        return type_(full_msg)
 
     def __call__(self, environ, start_response):
         """ If HTTP_X_METHOD_OVERRIDE is included with the request and method

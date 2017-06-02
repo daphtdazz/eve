@@ -7,10 +7,10 @@ from pymongo import MongoClient
 
 import eve
 from eve.auth import BasicAuth
+from eve.default_settings import MONGO_HOST, MONGO_PORT
 from eve.tests import TestBase
 from eve.tests.test_settings import MONGO1_PASSWORD, MONGO1_USERNAME, \
-    MONGO1_DBNAME, MONGO_DBNAME, \
-    MONGO_HOST, MONGO_PORT
+    MONGO1_DBNAME, MONGO_DBNAME
 
 
 class TestMultiMongo(TestBase):

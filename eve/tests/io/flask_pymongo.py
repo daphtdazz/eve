@@ -1,8 +1,9 @@
 from eve.tests import TestBase
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
+from eve.default_settings import MONGO_HOST, MONGO_PORT
 from eve.tests.test_settings import MONGO1_DBNAME, MONGO1_USERNAME, \
-    MONGO1_PASSWORD, MONGO_HOST, MONGO_PORT
+    MONGO1_PASSWORD
 from eve.io.mongo.flask_pymongo import PyMongo
 
 

@@ -46,47 +46,50 @@ class TestConfig(TestBase):
         self.assertEqual(type(self.app.data), Mongo)
 
     def test_default_settings(self):
-        self.assertEqual(self.app.settings, self.settings_file)
+        app = Eve()
+
+        # Check the default is selected.
+        self.assertEqual(app.settings, 'settings.py')
 
         # TODO add tests for other global default values
-        self.assertEqual(self.app.config['RATE_LIMIT_GET'], None)
-        self.assertEqual(self.app.config['RATE_LIMIT_POST'], None)
-        self.assertEqual(self.app.config['RATE_LIMIT_PATCH'], None)
-        self.assertEqual(self.app.config['RATE_LIMIT_DELETE'], None)
+        self.assertEqual(app.config['DOMAIN'], {})
+        self.assertEqual(app.config['RATE_LIMIT_GET'], None)
+        self.assertEqual(app.config['RATE_LIMIT_POST'], None)
+        self.assertEqual(app.config['RATE_LIMIT_PATCH'], None)
+        self.assertEqual(app.config['RATE_LIMIT_DELETE'], None)
 
-        self.assertEqual(self.app.config['MONGO_HOST'], 'localhost')
-        self.assertEqual(self.app.config['MONGO_PORT'], 27017)
-        self.assertEqual(self.app.config['MONGO_QUERY_BLACKLIST'], ['$where',
-                                                                    '$regex'])
-        self.assertEqual(self.app.config['MONGO_WRITE_CONCERN'], {'w': 1})
-        self.assertEqual(self.app.config['ISSUES'], '_issues')
+        self.assertEqual(app.config['MONGO_HOST'], 'localhost')
+        self.assertEqual(app.config['MONGO_PORT'], 27017)
+        self.assertEqual(app.config['MONGO_QUERY_BLACKLIST'], ['$where',
+                                                               '$regex'])
+        self.assertEqual(app.config['MONGO_WRITE_CONCERN'], {'w': 1})
+        self.assertEqual(app.config['ISSUES'], '_issues')
 
-        self.assertEqual(self.app.config['OPLOG'], False)
-        self.assertEqual(self.app.config['OPLOG_NAME'], 'oplog')
-        self.assertEqual(self.app.config['OPLOG_ENDPOINT'], None)
-        self.assertEqual(self.app.config['OPLOG_AUDIT'], True)
-        self.assertEqual(self.app.config['OPLOG_METHODS'], ['DELETE',
-                                                            'POST',
-                                                            'PATCH',
-                                                            'PUT'])
-        self.assertEqual(self.app.config['OPLOG_CHANGE_METHODS'], ['DELETE',
-                                                                   'PATCH',
-                                                                   'PUT'])
-        self.assertEqual(self.app.config['QUERY_WHERE'], 'where')
-        self.assertEqual(self.app.config['QUERY_PROJECTION'], 'projection')
-        self.assertEqual(self.app.config['QUERY_SORT'], 'sort')
-        self.assertEqual(self.app.config['QUERY_PAGE'], 'page')
-        self.assertEqual(self.app.config['QUERY_MAX_RESULTS'], 'max_results')
-        self.assertEqual(self.app.config['QUERY_EMBEDDED'], 'embedded')
-        self.assertEqual(self.app.config['QUERY_AGGREGATION'], 'aggregate')
+        self.assertEqual(app.config['OPLOG'], False)
+        self.assertEqual(app.config['OPLOG_NAME'], 'oplog')
+        self.assertEqual(app.config['OPLOG_ENDPOINT'], None)
+        self.assertEqual(app.config['OPLOG_AUDIT'], True)
+        self.assertEqual(app.config['OPLOG_METHODS'], [
+            'DELETE', 'POST', 'PATCH', 'PUT'
+        ])
+        self.assertEqual(app.config['OPLOG_CHANGE_METHODS'], [
+            'DELETE', 'PATCH', 'PUT'
+        ])
+        self.assertEqual(app.config['QUERY_WHERE'], 'where')
+        self.assertEqual(app.config['QUERY_PROJECTION'], 'projection')
+        self.assertEqual(app.config['QUERY_SORT'], 'sort')
+        self.assertEqual(app.config['QUERY_PAGE'], 'page')
+        self.assertEqual(app.config['QUERY_MAX_RESULTS'], 'max_results')
+        self.assertEqual(app.config['QUERY_EMBEDDED'], 'embedded')
+        self.assertEqual(app.config['QUERY_AGGREGATION'], 'aggregate')
 
-        self.assertEqual(self.app.config['JSON_SORT_KEYS'], False)
-        self.assertEqual(self.app.config['SOFT_DELETE'], False)
-        self.assertEqual(self.app.config['DELETED'], '_deleted')
-        self.assertEqual(self.app.config['SHOW_DELETED_PARAM'], 'show_deleted')
-        self.assertEqual(self.app.config['STANDARD_ERRORS'],
+        self.assertEqual(app.config['JSON_SORT_KEYS'], False)
+        self.assertEqual(app.config['SOFT_DELETE'], False)
+        self.assertEqual(app.config['DELETED'], '_deleted')
+        self.assertEqual(app.config['SHOW_DELETED_PARAM'], 'show_deleted')
+        self.assertEqual(app.config['STANDARD_ERRORS'],
                          [400, 401, 404, 405, 406, 409, 410, 412, 422, 428])
-        self.assertEqual(self.app.config['UPSERT_ON_PUT'], True)
+        self.assertEqual(app.config['UPSERT_ON_PUT'], True)
 
     def test_settings_as_dict(self):
         my_settings = {'API_VERSION': 'override!', 'DOMAIN': {'contacts': {}}}
@@ -94,6 +97,15 @@ class TestConfig(TestBase):
         self.assertEqual(self.app.config['API_VERSION'], 'override!')
         # did not reset other defaults
         self.assertEqual(self.app.config['MONGO_WRITE_CONCERN'], {'w': 1})
+
+    def test_bad_absolute_settings_file(self):
+        self.assertRaises(
+            FileNotFoundError,
+            Eve,
+            settings=os.path.join(
+                os.sep, 'this', 'absolute', 'file', 'does', 'not', 'exist',
+                'i', 'hope', 'fda49315', '432')
+        )
 
     def test_existing_env_config(self):
         env = os.environ
@@ -125,8 +137,6 @@ class TestConfig(TestBase):
         self.assertEqual(type(self.app.data), MyTestDataLayer)
 
     def test_validate_domain_struct(self):
-        del self.app.config['DOMAIN']
-        self.assertValidateConfigFailure('missing')
 
         self.app.config['DOMAIN'] = []
         self.assertValidateConfigFailure('must be a dict')

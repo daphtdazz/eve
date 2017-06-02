@@ -11,6 +11,11 @@
     :copyright: (c) 2017 by Nicola Iarocci.
     :license: BSD, see LICENSE for more details.
 
+    .. versionchanged:: 0.8
+        'DOMAIN' added and set to {} (empty dictionary)
+        'MONGO_HOST' added and set to localhost
+        'MONGO_PORT' added and set to 27017
+
     .. versionchanged:: 0.7
        'OPTIMIZE_PAGINATION_FOR_SPEED' added and set to False.
        'OPLOG_RETURN_EXTRA_FIELD' added and set to False.
@@ -96,6 +101,7 @@
        'X_DOMAIN' keyword added to support Cross-Origin Resource Sharing CORS
 """
 # DEBUG = True
+DOMAIN = {}
 
 # RFC 1123 (ex RFC 822)
 DATE_FORMAT = '%a, %d %b %Y %H:%M:%S GMT'
@@ -243,6 +249,10 @@ RATE_LIMIT_GET = None
 RATE_LIMIT_POST = None
 RATE_LIMIT_PATCH = None
 RATE_LIMIT_DELETE = None
+
+# Mongo defaults
+MONGO_HOST = 'localhost'
+MONGO_PORT = 27017
 
 # disallow Mongo's javascript queries as they might be vulnerable to injection
 # attacks ('ReDoS' especially), are probably too complex for the average API

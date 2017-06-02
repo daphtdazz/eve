@@ -10,8 +10,9 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 from bson import ObjectId
 from eve.tests.test_settings import MONGO_PASSWORD, MONGO_USERNAME, \
-    MONGO_DBNAME, DOMAIN, MONGO_HOST, MONGO_PORT
+    MONGO_DBNAME, DOMAIN
 from eve import ISSUES, ETAG
+from eve.default_settings import MONGO_HOST, MONGO_PORT
 from eve.utils import date_to_str
 try:
     from urlparse import parse_qs, urlparse
