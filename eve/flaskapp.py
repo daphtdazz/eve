@@ -982,29 +982,25 @@ class Eve(Flask, Events):
 
     def _resolve_settings_file(self):
         if os.path.isabs(self.settings):
-            pyfile = self.settings
-        else:
-            def find_settings_file(file_name):
-                # check if we can locate the file from sys.argv[0]
-                abspath = os.path.abspath(os.path.dirname(sys.argv[0]))
-                settings_file = os.path.join(abspath, file_name)
-                if os.path.isfile(settings_file):
-                    return settings_file
-                else:
-                    # try to find settings.py in one of the
-                    # paths in sys.path
-                    for p in sys.path:
-                        for root, dirs, files in os.walk(p):
-                            for f in fnmatch.filter(files, file_name):
-                                if os.path.isfile(os.path.join(root, f)):
-                                    return os.path.join(root, file_name)
-            # try to load file from environment variable or settings.py
-            pyfile = find_settings_file(
-                os.environ.get('EVE_SETTINGS') or self.settings
-            )
-        if not pyfile:
-            raise IOError('Could not load settings.')
-        return pyfile
+            return self.settings
+
+        file_name = os.environ.get('EVE_SETTINGS') or self.settings
+
+        # check if we can locate the file from sys.argv[0]
+        abspath = os.path.abspath(os.path.dirname(sys.argv[0]))
+        settings_file = os.path.join(abspath, file_name)
+        if os.path.isfile(settings_file):
+            return settings_file
+
+        # try to find settings.py in one of the
+        # paths in sys.path
+        for p in sys.path:
+            for root, dirs, files in os.walk(p):
+                for f in fnmatch.filter(files, file_name):
+                    if os.path.isfile(os.path.join(root, f)):
+                        return os.path.join(root, file_name)
+
+        raise IOError('Could not resolve settings file %s' % file_name)
 
     def __call__(self, environ, start_response):
         """ If HTTP_X_METHOD_OVERRIDE is included with the request and method
