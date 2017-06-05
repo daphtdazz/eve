@@ -2,6 +2,13 @@
 
 Configuration
 =============
+
+Eve applications are designed to be configured using python files, but can also be configured in code with a dictionary passed in as the `settings` keyword argument to the :py:class:`eve.Eve` constructor. The final settings an Eve application uses are determined as follows:
+
+1. First Eve loads all the default settings from :py:mod:`eve.default_settings`.
+2. If a dictionary was passed to the :py:class:`eve.Eve` constructor, these are merged into the current settings, overwriting any that are repeated. **In this case no further steps are taken.**
+3. If an *absolute path* was passed to.
+
 Generally Eve configuration is best done with configuration files. The
 configuration files themselves are actual Python files. However, Eve will
 give precedence to dictionary-based settings first, then it will try to
