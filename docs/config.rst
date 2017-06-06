@@ -2,37 +2,30 @@
 
 Configuration
 =============
-Generally Eve configuration is best done with configuration files. The
-configuration files themselves are actual Python files. However, Eve will
-give precedence to dictionary-based settings first, then it will try to
-locate a file passed in :envvar:`EVE_SETTINGS` environmental variable (if
-set) and finally it will try to locate `settings.py` or a file with filename
-passed to `settings` flag in constructor.
 
-Configuration With Files
+Eve has a flexible configuration system designed to make it easy to switch between development and production environments. Configuration files written in python for power and encapsulation are the recommended means of configuration, but settings can also be configured in code with a dictionary passed in as the `settings` keyword argument to the :class:`~eve.Eve` constructor for convenience.
+
+Configuration resolution
 ------------------------
-On startup, if `settings` flag is omitted in constructor, Eve will try to locate
-file named `settings.py`, first in the application folder and then in one of the
-application's subfolders. You can choose an alternative filename/path, just pass
-it as an argument when you instantiate the application. If the file path is
-relative, Eve will try to locate it recursively in one of the folders in your
-`sys.path`, therefore you have to be sure that your application root is appended
-to it. This is useful, for example, in testing environments, when settings file
-is not necessarily located in the root of your application.
 
-.. code-block:: python
+The final settings an Eve application uses are determined as follows.
 
-    from eve import Eve
+1. First Eve loads all the default settings from :py:mod:`eve.default_settings`.
+2. Eve then attempts to merge one extra set of configuration into the settings based on the ``settings`` keyword argument to the :py:class:`~eve.Eve` constructor or the environment variable :envvar:`EVE_SETTINGS`, with the following precedence order:
+    a. If ``settings`` is a dictionary, that dictionary is used.
+    b. If ``settings`` is an absolute path, that file is loaded and those settings are used.
+    c. If :envvar:`EVE_SETTINGS` is set, it is selected for the next stage, else if ``settings`` is passed it is selected, and otherwise the default name ``'settings.py'`` is selected.
 
-    app = Eve(settings='my_settings.py')
-    app.run()
+        i. If the selection is an absolute path, that file is loaded and its settings used.
+        ii. Else, the selection is assumed to be a file name. If it exists in the directory of the application, that file is used. E.g., if you ran ``python /usr/local/my_eve_app/run.py``, the directory ``/usr/local/my_eve_app`` would be checked.
+        iii. Then each directory listed in ``sys.path`` is searched in order recursively for the file. If it is found it is used.
 
-Configuration With a Dictionary
+            This is to allow you to include the settings file in your module installed on one of your environment's module paths, such as those in :envvar:`PYTHONPATH`.
+        iv. If no file is found by this stage, ``IOError`` is raised.
+
+Example Configuration With a Dictionary
 -------------------------------
-Alternatively, you can choose to provide a settings dictionary. Unlike
-configuring Eve with the settings file, dictionary-based approach will only
-update Eve's default settings with your own values, rather than overwriting
-all the settings.
+Here is an example where some of Eve's defaults are overridden using a settings dictionary.
 
 .. code-block:: python
 
@@ -59,7 +52,7 @@ configuration that overrides the values as necessary.
 This is the main reason why you can override or extend the settings with the
 contents of the file the :envvar:`EVE_SETTINGS` environment variable points to.
 The development/local settings could be stored in `settings.py` and then, in
-production, you could export EVE_SETTINGS=/path/to/production_setting.py, and
+production, you could export ``EVE_SETTINGS=/path/to/production_setting.py``, and
 you are done.
 
 There are many alternative ways to handle development/production
