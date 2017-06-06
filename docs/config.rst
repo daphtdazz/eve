@@ -10,17 +10,19 @@ Configuration resolution
 
 The final settings an Eve application uses are determined as follows.
 
-1. First Eve loads all the default settings from :py:mod:`eve.default_settings`.
-2. Eve then attempts to merge one extra set of configuration into the settings based on the ``settings`` keyword argument to the :py:class:`~eve.Eve` constructor or the environment variable :envvar:`EVE_SETTINGS`, with the following precedence order:
-    a. If ``settings`` is a dictionary, that dictionary is used.
-    b. If ``settings`` is an absolute path, that file is loaded and those settings are used.
-    c. If :envvar:`EVE_SETTINGS` is set, it is selected for the next stage, else if ``settings`` is passed it is selected, and otherwise the default name ``'settings.py'`` is selected.
+1.  First Eve loads all the default settings from :py:mod:`eve.default_settings`.
 
-        i. If the selection is an absolute path, that file is loaded and its settings used.
+2.  Eve then attempts to merge one extra set of configuration into the settings based on the ``settings`` keyword argument to the :py:class:`~eve.Eve` constructor or the environment variable :envvar:`EVE_SETTINGS`, with the following precedence order:
+
+    a.  If ``settings`` is a dictionary, that dictionary is used.
+    b.  If ``settings`` is an absolute path, that file is loaded and those settings are used.
+    c.  If :envvar:`EVE_SETTINGS` is set, it is selected for the next stage, else if ``settings`` is passed it is selected, and otherwise the default name ``'settings.py'`` is selected.
+
+        i.  If the selection is an absolute path, that file is loaded and its settings used.
         ii. Else, the selection is assumed to be a file name. If it exists in the directory of the application, that file is used. E.g., if you ran ``python /usr/local/my_eve_app/run.py``, the directory ``/usr/local/my_eve_app`` would be checked.
         iii. Then each directory listed in ``sys.path`` is searched in order recursively for the file. If it is found it is used.
 
-            This is to allow you to include the settings file in your module installed on one of your environment's module paths, such as those in :envvar:`PYTHONPATH`.
+             This is to allow you to include the settings file in your module installed on one of your environment's module paths, such as those in :envvar:`PYTHONPATH`.
         iv. If no file is found by this stage, ``IOError`` is raised.
 
 Example Configuration With a Dictionary
